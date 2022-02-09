@@ -89,6 +89,7 @@ namespace makeskn
                                             if (strInner.Length != 0)
                                             {
                                                 XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
+                                                xmlReader.WhitespaceHandling = WhitespaceHandling.None;
                                                 XmlNode SkeletonNode = xDoc.ReadNode(xmlReader);
                                                 xDoc.DocumentElement.InsertBefore(SkeletonNode, W3DContainer);
                                                 xDoc.Save(nXML);
@@ -125,6 +126,7 @@ namespace makeskn
                                         if (strInner.Length != 0)
                                         {
                                             XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
+                                            xmlReader.WhitespaceHandling = WhitespaceHandling.None;
                                             XmlNode AnimationNode = xDoc.ReadNode(xmlReader);
                                             xDoc.DocumentElement.InsertBefore(AnimationNode, W3DContainer);
                                             xDoc.Save(nXML);
@@ -149,6 +151,7 @@ namespace makeskn
                                             if (strInner.Length != 0)
                                             {
                                                 XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
+                                                xmlReader.WhitespaceHandling = WhitespaceHandling.None;
                                                 XmlNode OBBoxNode = xDoc.ReadNode(xmlReader);
                                                 xDoc.DocumentElement.InsertBefore(OBBoxNode, W3DContainer);
                                                 xDoc.Save(nXML);
@@ -182,6 +185,7 @@ namespace makeskn
                                             if (strInner.Length != 0)
                                             {
                                                 XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
+                                                xmlReader.WhitespaceHandling = WhitespaceHandling.None;
                                                 XmlNode MeshNode = xDoc.ReadNode(xmlReader);
                                                 xDoc.DocumentElement.InsertBefore(MeshNode, W3DContainer);
                                                 xDoc.Save(nXML);
