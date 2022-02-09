@@ -6,6 +6,12 @@ using System.IO;
 using System.Data;
 using System.Xml;
 
+enum RenderObjectType
+{
+    Mesh,
+    CollisionBox
+};
+
 namespace makeskn
 {
     class Program
@@ -26,8 +32,8 @@ namespace makeskn
                 {
                     string Skeleton = "";
                     string Container = "";
-                    ArrayList OBBoxes = new ArrayList();
-                    ArrayList Meshes = new ArrayList();
+                    ArrayList SubObjects = new ArrayList();
+                    ArrayList SubObjectTypes = new ArrayList();
                     ArrayList TexturesList = new ArrayList();
                     XmlDocument xDoc = new XmlDocument();
                     xDoc.Load(w3xfile);
@@ -59,20 +65,6 @@ namespace makeskn
                                     }
                                 }
 
-                                XmlNodeList CollisionBoxs = xDoc.GetElementsByTagName("CollisionBox");
-                                foreach (XmlNode CollisionBox in CollisionBoxs)
-                                {
-                                    string strValue = (string)CollisionBox.InnerText;
-                                    OBBoxes.Add(strValue);
-                                    Console.Write(".");
-                                }
-                                XmlNodeList Meshs = xDoc.GetElementsByTagName("Mesh");
-                                foreach (XmlNode SingleMesh in Meshs)
-                                {
-                                    string strValue = (string)SingleMesh.InnerText;
-                                    Meshes.Add(strValue);
-                                    Console.Write(".");
-                                }
                                 if (!String.IsNullOrEmpty(Skeleton))
                                 {
                                     // If Container ID and Skeleton ID is the same, should be in same file
@@ -137,71 +129,54 @@ namespace makeskn
                                     reader.Close();
                                     File.Delete(AnimationFile);
                                 }
-                                if (OBBoxes.Count != 0)
+                                
+                                XmlNodeList RenderObjects = xDoc.GetElementsByTagName("RenderObject");
+                                foreach (XmlNode RenderObject in RenderObjects)
                                 {
-                                    foreach (string OBBox in OBBoxes)
+                                    string strValue = (string)RenderObject.FirstChild.InnerText;
+                                    if (RenderObject.FirstChild.Name == "Mesh")
                                     {
-                                        string OBBoxFile = Path.Combine(fPath, (OBBox + ".w3x"));
-                                        Console.Write(".");
-                                        XmlTextReader reader = new XmlTextReader(OBBoxFile);
-                                        while (reader.Read())
-                                        {
-                                            reader.ReadToFollowing("W3DCollisionBox");
-                                            string strInner = reader.ReadOuterXml();
-                                            if (strInner.Length != 0)
-                                            {
-                                                XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
-                                                xmlReader.WhitespaceHandling = WhitespaceHandling.None;
-                                                XmlNode OBBoxNode = xDoc.ReadNode(xmlReader);
-                                                xDoc.DocumentElement.InsertBefore(OBBoxNode, W3DContainer);
-                                                xDoc.Save(nXML);
-                                                Console.Write(".");
-                                            }
-                                        }
-                                        reader.Close();
+                                        SubObjectTypes.Add(RenderObjectType.Mesh);
                                     }
-                                    foreach (string OBBox in OBBoxes)
+                                    else if (RenderObject.FirstChild.Name == "CollisionBox")
                                     {
-                                        string OBBoxFile = Path.Combine(fPath, (OBBox + ".w3x"));
-                                        if (File.Exists(OBBoxFile))
-                                        {
-                                            File.Delete(OBBoxFile);
-                                            Console.Write(".");
-                                        }
+                                        SubObjectTypes.Add(RenderObjectType.CollisionBox);
                                     }
+                                    SubObjects.Add(strValue);
+                                    Console.Write(".");
                                 }
 
-                                if (Meshes.Count != 0)
+                                if (SubObjects.Count > 0)
                                 {
-                                    foreach (string Mesh in Meshes)
+                                    for (int i = 0; i < SubObjects.Count; i++)
                                     {
-                                        string MeshFile = Path.Combine(fPath, (Mesh + ".w3x"));
+                                        string SubObjectFile = Path.Combine(fPath, (SubObjects[i] + ".w3x"));
                                         Console.Write(".");
-                                        XmlTextReader reader = new XmlTextReader(MeshFile);
+                                        XmlTextReader reader = new XmlTextReader(SubObjectFile);
                                         while (reader.Read())
                                         {
-                                            reader.ReadToFollowing("W3DMesh");
+                                            if ((RenderObjectType)SubObjectTypes[i] == RenderObjectType.Mesh)
+                                            {
+                                                reader.ReadToFollowing("W3DMesh");
+                                            }
+                                            else if ((RenderObjectType)SubObjectTypes[i] == RenderObjectType.CollisionBox)
+                                            {
+                                                reader.ReadToFollowing("W3DCollisionBox");
+                                            }
                                             string strInner = reader.ReadOuterXml();
                                             if (strInner.Length != 0)
                                             {
                                                 XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
                                                 xmlReader.WhitespaceHandling = WhitespaceHandling.None;
-                                                XmlNode MeshNode = xDoc.ReadNode(xmlReader);
-                                                xDoc.DocumentElement.InsertBefore(MeshNode, W3DContainer);
+                                                XmlNode SubObjectNode = xDoc.ReadNode(xmlReader);
+                                                xDoc.DocumentElement.InsertBefore(SubObjectNode, W3DContainer);
                                                 xDoc.Save(nXML);
                                                 Console.Write(".");
                                             }
                                         }
                                         reader.Close();
-                                    }
-                                    foreach (string Mesh in Meshes)
-                                    {
-                                        string MeshFile = Path.Combine(fPath, (Mesh + ".w3x"));
-                                        if (File.Exists(MeshFile))
-                                        {
-                                            File.Delete(MeshFile);
-                                            Console.Write(".");
-                                        }
+                                        File.Delete(SubObjectFile);
+                                        Console.Write(".");
                                     }
                                 }
                             }
