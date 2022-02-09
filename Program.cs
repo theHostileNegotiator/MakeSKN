@@ -217,20 +217,19 @@ namespace makeskn
 
                         Console.Write("[SUCCESS]\n");
 
-                        if (!new DirectoryInfo(Path.Combine(fPath, "Compiled")).Exists)
-                        {
-                            new DirectoryInfo(fPath).CreateSubdirectory("Compiled");
-                        }
-
+                        // Set up to sort into sub folders
+                        string SubFolderName = Container.Substring(0, 2);
+                        DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                        CompiledFolder.CreateSubdirectory(SubFolderName);
 
                         if (File.Exists(Path.Combine(fPath, (Container + ".w3x"))))
                         {
-                            System.IO.File.Copy(Path.Combine(fPath, (Container + ".w3x")), Path.Combine(fPath, ("Compiled\\" + Container + ".w3x")), true);
+                            System.IO.File.Copy(Path.Combine(fPath, (Container + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Container + ".w3x")), true);
                             File.Delete(Path.Combine(fPath, (Container + ".w3x")));
                         }
                         else
                         {
-                            System.IO.File.Copy(Path.Combine(fPath, (Container + "_CTR.w3x")), Path.Combine(fPath, ("Compiled\\" + Container + ".w3x")), true);
+                            System.IO.File.Copy(Path.Combine(fPath, (Container + "_CTR.w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Container + ".w3x")), true);
                             File.Delete(Path.Combine(fPath, (Container + "_CTR.w3x")));
                         }
 
@@ -330,6 +329,7 @@ namespace makeskn
 
                                         // Look for Container, if it has a skeleton and animations then the Container must exist with the same ID
                                         // Bibber's Container extension "_CTR". Not applied to SKN but normally the animations and skeleton won't match the name in this case
+                                        // Except GBGOLUMCAN_D2AN in Tiberium Wars (WHY!!!)
                                         string ContainerFile = Path.Combine(fPath, (Animation + "_CTR.w3x"));
                                         Console.Write(".");
                                         XmlTextReader Containerreader = new XmlTextReader(ContainerFile);
@@ -492,13 +492,11 @@ namespace makeskn
                                 Console.Write("[SUCCESS]\n");
 
                                 // Copy into compiled folder to avoid second pass
-                                if (!new DirectoryInfo(Path.Combine(fPath, "Compiled")).Exists)
-                                {
-                                    new DirectoryInfo(fPath).CreateSubdirectory("Compiled");
-                                }
+                                string SubFolderName = Animation.Substring(0, 2);
+                                DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                                CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                                System.IO.File.Copy(Path.Combine(fPath, (Animation + ".w3x")), Path.Combine(fPath, ("Compiled\\" + Animation + ".w3x")), true);
-
+                                System.IO.File.Copy(Path.Combine(fPath, (Animation + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Animation + ".w3x")), true);
                                 File.Delete(Path.Combine(fPath, (Animation + ".w3x")));
                             }
                         }
@@ -575,15 +573,14 @@ namespace makeskn
 
                             Console.Write("[SUCCESS]\n");
 
-                            if (!new DirectoryInfo(Path.Combine(fPath, "Compiled")).Exists)
-                            {
-                                new DirectoryInfo(fPath).CreateSubdirectory("Compiled");
-                            }
+                            // Copy into compiled folder to avoid second pass
+                            string SubFolderName = Animation.Substring(0, 2);
+                            DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                            CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            System.IO.File.Copy(Path.Combine(fPath, (Animation + ".w3x")), Path.Combine(fPath, ("Compiled\\" + Animation + ".w3x")), true);
-
+                            System.IO.File.Copy(Path.Combine(fPath, (Animation + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Animation + ".w3x")), true);
                             File.Delete(Path.Combine(fPath, (Animation + ".w3x")));
-                            
+
                         }
                     }
                     if (W3DSkeletons.Count != 0)
@@ -613,19 +610,18 @@ namespace makeskn
 
                             Console.Write("[SUCCESS]\n");
 
-                            if (!new DirectoryInfo(Path.Combine(fPath, "Compiled")).Exists)
-                            {
-                                new DirectoryInfo(fPath).CreateSubdirectory("Compiled");
-                            }
+                            string SubFolderName = Skeleton.Substring(0, 2);
+                            DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                            CompiledFolder.CreateSubdirectory(SubFolderName);
 
                             if (File.Exists(Path.Combine(fPath, (Skeleton + ".w3x"))))
                             {
-                                System.IO.File.Copy(Path.Combine(fPath, (Skeleton + ".w3x")), Path.Combine(fPath, ("Compiled\\" + Skeleton + ".w3x")), true);
+                                System.IO.File.Copy(Path.Combine(fPath, (Skeleton + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Skeleton + ".w3x")), true);
                                 File.Delete(Path.Combine(fPath, (Skeleton + ".w3x")));
                             }
                             else
                             {
-                                System.IO.File.Copy(Path.Combine(fPath, (Skeleton + "_HRC.w3x")), Path.Combine(fPath, ("Compiled\\" + Skeleton + ".w3x")), true);
+                                System.IO.File.Copy(Path.Combine(fPath, (Skeleton + "_HRC.w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Skeleton + ".w3x")), true);
                                 File.Delete(Path.Combine(fPath, (Skeleton + "_HRC.w3x")));
                             }
                         }
@@ -657,13 +653,11 @@ namespace makeskn
 
                             Console.Write("[SUCCESS]\n");
 
-                            if (!new DirectoryInfo(Path.Combine(fPath, "Compiled")).Exists)
-                            {
-                                new DirectoryInfo(fPath).CreateSubdirectory("Compiled");
-                            }
+                            string SubFolderName = Mesh.Substring(0, 2);
+                            DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                            CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            System.IO.File.Copy(Path.Combine(fPath, (Mesh + ".w3x")), Path.Combine(fPath, ("Compiled\\" + Mesh + ".w3x")), true);
-
+                            System.IO.File.Copy(Path.Combine(fPath, (Mesh + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Mesh + ".w3x")), true);
                             File.Delete(Path.Combine(fPath, (Mesh + ".w3x")));
                         }
                     }
