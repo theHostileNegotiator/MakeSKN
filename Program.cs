@@ -295,9 +295,27 @@ namespace makeskn
                                         Animation = xnodAttribute.Value;
                                         Console.Write(".");
                                     }
+                                    if (xnodAttribute.Name == "Hierarchy")
+                                    {
+                                        Skeleton = xnodAttribute.Value;
+                                        Console.Write(".");
+                                    }
                                 }
+
+                                if (Includes.Count == 0)
+                                {
+                                    XmlElement Include = xDoc.CreateElement("Include", "uri:ea.com:eala:asset");
+                                    Include.SetAttribute("type", "all");
+                                    Skeleton = Skeleton.ToLower();
+                                    Include.SetAttribute("source", "ART:" + Skeleton + ".w3x");
+                                    newIncludes.AppendChild(Include);
+                                    xDoc.DocumentElement.InsertBefore(newIncludes, W3DAnimation);
+                                    xDoc.Save(nXML);
+                                    Console.Write(".");
+                                }
+
                             }
-                                // Remove Comments
+                            // Remove Comments
                             XmlNodeList Comments = xDoc.SelectNodes("//comment()");
                             foreach (XmlNode Comment in Comments)
                             {
@@ -333,6 +351,8 @@ namespace makeskn
                                         Console.Write(".");
                                     }
                                 }
+                                xDoc.DocumentElement.InsertBefore(newIncludes, W3DHierarchy);
+                                xDoc.Save(nXML);
                             }
                             // Remove Comments
                             XmlNodeList Comments = xDoc.SelectNodes("//comment()");
@@ -363,6 +383,7 @@ namespace makeskn
                     }
                     if (W3DMeshes.Count != 0)
                     {
+                        ArrayList TexturesList = new ArrayList();
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             foreach (XmlNode W3DMesh in W3DMeshes)
@@ -384,6 +405,33 @@ namespace makeskn
                                 xDoc.PreserveWhitespace = false;
                                 Comment.ParentNode.RemoveChild(Comment);
                                 xDoc.Save(nXML);
+                            }
+
+                            // Include Textures
+                            XmlNodeList Textures = xDoc.GetElementsByTagName("Texture");
+                            foreach (XmlNode Texture in Textures)
+                            {
+                                string strTexture = (string)Texture.InnerText;
+                                strTexture = strTexture.Trim();
+                                if (!TexturesList.Contains(strTexture))
+                                {
+                                    TexturesList.Add(strTexture);
+                                    Console.Write(".");
+                                }
+                            }
+                            foreach (XmlNode W3DMesh in W3DMeshes)
+                            {
+                                xDoc.DocumentElement.InsertBefore(newIncludes, W3DMesh);
+                            }
+                            foreach (string strTex in TexturesList)
+                            {
+                                XmlElement Include = xDoc.CreateElement("Include", "uri:ea.com:eala:asset");
+                                Include.SetAttribute("type", "all");
+                                string strTex2 = strTex.ToLower();
+                                Include.SetAttribute("source", "ART:" + strTex2 + ".xml");
+                                newIncludes.AppendChild(Include);
+                                xDoc.Save(nXML);
+                                Console.Write(".");
                             }
 
                             Console.Write("[SUCCESS]\n");
