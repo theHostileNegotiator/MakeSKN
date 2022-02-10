@@ -482,6 +482,46 @@ namespace makeskn
                 }
             }
         }
+
+        static void movetexturefiles(string texturefile, string fPath)
+        {
+            if (File.Exists(texturefile))
+            {
+                try
+                {
+                    Console.Write("\nMoving Texture File: " + texturefile);
+                    string texture = Path.GetFileNameWithoutExtension(texturefile);
+                    // Packed and Individual Images are stored in the Image folder instead of SubFolder
+                    if (!texture.StartsWith("Packed") && !texture.StartsWith("Individual"))
+                    {
+                        string SubFolderName = texture.Substring(0, 2);
+                        DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                        CompiledFolder.CreateSubdirectory(SubFolderName.ToUpperInvariant());
+
+                        // Move Texture file
+                        System.IO.File.Copy(Path.Combine(fPath, (texture + ".dds")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + texture + ".dds")), true);
+                        File.Delete(Path.Combine(fPath, (texture + ".dds")));
+                        // With Coresponding xml
+                        System.IO.File.Copy(Path.Combine(fPath, (texture + ".xml")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + texture + ".xml")), true);
+                        File.Delete(Path.Combine(fPath, (texture + ".xml")));
+                    }
+                    else
+                    {
+                        DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
+                        CompiledFolder.CreateSubdirectory("Images");
+                        System.IO.File.Copy(Path.Combine(fPath, (texture + ".dds")), Path.Combine(fPath, ("Compiled\\Images\\" + texture + ".dds")), true);
+                        File.Delete(Path.Combine(fPath, (texture + ".dds")));
+                        // Packed and Individual Images are included in a single xml file each
+                        File.Delete(Path.Combine(fPath, (texture + ".xml")));
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.Write("[ERROR]\n");
+                    EmitError("Failed with exception: {0}" + Convert.ToString(e));
+                }
+            }
+        }
         static void buildskn(string fPath)
         {
             DirectoryInfo directory = new DirectoryInfo(fPath);
@@ -495,6 +535,11 @@ namespace makeskn
             foreach (string w3xfile in w3xfiles)
             {
                 movefiles(w3xfile, fPath);
+            }
+            string[] texturefiles = Directory.GetFiles(fPath, "*.dds");
+            foreach (string texturefile in texturefiles)
+            {
+                movetexturefiles(texturefile, fPath);
             }
         }
 
