@@ -42,6 +42,8 @@ namespace makeskn
                     XmlNodeList W3DContainers = xDoc.GetElementsByTagName("W3DContainer");
                     XmlNodeList W3DSkeletons = xDoc.GetElementsByTagName("W3DHierarchy");
                     XmlNodeList W3DAnimations = xDoc.GetElementsByTagName("W3DAnimation");
+                    XmlNodeList W3DMeshes = xDoc.GetElementsByTagName("W3DMesh");
+                    XmlNodeList W3DCollisionBoxes = xDoc.GetElementsByTagName("W3DCollisionBox");
                     XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
                     if (W3DContainers.Count != 0)
                     {
@@ -198,6 +200,11 @@ namespace makeskn
                             foreach (XmlNode W3DHierarchy in W3DSkeletons)
                             {
                                 xDoc.DocumentElement.InsertBefore(newIncludes, W3DHierarchy);
+
+                                // Remove redundant namespace
+                                XmlAttributeCollection mapAttributes = W3DHierarchy.Attributes;
+                                mapAttributes.Remove(mapAttributes["xmlns"]);
+                                xDoc.Save(nXML);
                             }
                         }
                         foreach (string strTex in TexturesList)
@@ -216,6 +223,26 @@ namespace makeskn
                         {
                             xDoc.PreserveWhitespace = false;
                             Comment.ParentNode.RemoveChild(Comment);
+                            xDoc.Save(nXML);
+                        }
+
+                        // Remove Namespace in each W3D element
+                        foreach (XmlNode W3DAnimation in W3DAnimations)
+                        {
+                            XmlAttributeCollection mapAttributes = W3DAnimation.Attributes;
+                            mapAttributes.Remove(mapAttributes["xmlns"]);
+                            xDoc.Save(nXML);
+                        }
+                        foreach (XmlNode W3DMesh in W3DMeshes)
+                        {
+                            XmlAttributeCollection mapAttributes = W3DMesh.Attributes;
+                            mapAttributes.Remove(mapAttributes["xmlns"]);
+                            xDoc.Save(nXML);
+                        }
+                        foreach (XmlNode W3DCollisionBox in W3DCollisionBoxes)
+                        {
+                            XmlAttributeCollection mapAttributes = W3DCollisionBox.Attributes;
+                            mapAttributes.Remove(mapAttributes["xmlns"]);
                             xDoc.Save(nXML);
                         }
 
@@ -267,6 +294,7 @@ namespace makeskn
 
                     if (W3DAnimations.Count != 0)
                     {
+                        Console.Write("\nProcessing W3X Animation: " + w3xfile);
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             XmlNamedNodeMap DeclarationAttributes = AssetDeclaration.Attributes;
@@ -338,6 +366,7 @@ namespace makeskn
                     }
                     if (W3DSkeletons.Count != 0)
                     {
+                        Console.Write("\nProcessing W3X Skeleton: " + w3xfile);
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             foreach (XmlNode W3DHierarchy in W3DSkeletons)
@@ -383,6 +412,7 @@ namespace makeskn
                     }
                     if (W3DMeshes.Count != 0)
                     {
+                        Console.Write("\nProcessing W3X Mesh: " + w3xfile);
                         ArrayList TexturesList = new ArrayList();
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
