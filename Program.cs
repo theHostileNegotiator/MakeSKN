@@ -47,7 +47,7 @@ namespace makeskn
                     XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
                     if (W3DContainers.Count != 0)
                     {
-                        Console.Write("\nProcessing W3X Container: " + w3xfile);
+                        Console.Write($"\nProcessing W3X Container: {w3xfile}");
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             foreach (XmlNode W3DContainer in W3DContainers)
@@ -73,7 +73,7 @@ namespace makeskn
                                     if (Container.ToLowerInvariant() == Skeleton.ToLowerInvariant())
                                     {
                                         // Bibber's skeleton extension "_HRC". Not applied to SKL but normally the containers won't match the name in this case
-                                        string SkeletonFile = Path.Combine(fPath, (Skeleton + "_HRC.w3x"));
+                                        string SkeletonFile = Path.Combine(fPath, $"{Skeleton}_HRC.w3x");
                                         Console.Write(".");
                                         XmlTextReader reader = new XmlTextReader(SkeletonFile);
                                         while (reader.Read())
@@ -100,7 +100,7 @@ namespace makeskn
                                         XmlElement Include = xDoc.CreateElement("Include", "uri:ea.com:eala:asset");
                                         Include.SetAttribute("type", "all");
                                         Skeleton = Skeleton.ToLower();
-                                        Include.SetAttribute("source", "ART:" + Skeleton + ".w3x");
+                                        Include.SetAttribute("source", $"ART:{Skeleton}.w3x");
                                         newIncludes.AppendChild(Include);
                                         xDoc.DocumentElement.InsertBefore(newIncludes, W3DContainer);
                                         xDoc.Save(nXML);
@@ -108,9 +108,9 @@ namespace makeskn
                                     }
                                 }
                                 // Search for animation files that have the same ID as the Container
-                                if (File.Exists(Path.Combine(fPath, Container + ".w3x")))
+                                if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
                                 {
-                                    string AnimationFile = Path.Combine(fPath, (Container + ".w3x"));
+                                    string AnimationFile = Path.Combine(fPath, $"{Container}.w3x");
                                     Console.Write(".");
                                     XmlTextReader reader = new XmlTextReader(AnimationFile);
                                     while (reader.Read())
@@ -152,7 +152,7 @@ namespace makeskn
                                 {
                                     for (int i = 0; i < SubObjects.Count; i++)
                                     {
-                                        string SubObjectFile = Path.Combine(fPath, (SubObjects[i] + ".w3x"));
+                                        string SubObjectFile = Path.Combine(fPath, $"{SubObjects[i]}.w3x");
                                         Console.Write(".");
                                         XmlTextReader reader = new XmlTextReader(SubObjectFile);
                                         while (reader.Read())
@@ -212,7 +212,7 @@ namespace makeskn
                             XmlElement Include = xDoc.CreateElement("Include", "uri:ea.com:eala:asset");
                             Include.SetAttribute("type", "all");
                             string strTex2 = strTex.ToLower();
-                            Include.SetAttribute("source", "ART:" + strTex2 + ".xml");
+                            Include.SetAttribute("source", $"ART:{strTex2}.xml");
                             newIncludes.AppendChild(Include);
                             xDoc.Save(nXML);
                             Console.Write(".");
@@ -253,15 +253,15 @@ namespace makeskn
                         DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                         CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                        if (File.Exists(Path.Combine(fPath, (Container + ".w3x"))))
+                        if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
                         {
-                            System.IO.File.Copy(Path.Combine(fPath, (Container + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Container + ".w3x")), true);
-                            File.Delete(Path.Combine(fPath, (Container + ".w3x")));
+                            File.Copy(Path.Combine(fPath, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
+                            File.Delete(Path.Combine(fPath, $"{Container}.w3x"));
                         }
                         else
                         {
-                            System.IO.File.Copy(Path.Combine(fPath, (Container + "_CTR.w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Container + ".w3x")), true);
-                            File.Delete(Path.Combine(fPath, (Container + "_CTR.w3x")));
+                            File.Copy(Path.Combine(fPath, $"{Container}_CTR.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
+                            File.Delete(Path.Combine(fPath, $"{Container}_CTR.w3x"));
                         }
 
                     }
@@ -294,7 +294,7 @@ namespace makeskn
 
                     if (W3DAnimations.Count != 0)
                     {
-                        Console.Write("\nProcessing W3X Animation: " + w3xfile);
+                        Console.Write($"\nProcessing W3X Animation: {w3xfile}");
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             XmlNamedNodeMap DeclarationAttributes = AssetDeclaration.Attributes;
@@ -335,7 +335,7 @@ namespace makeskn
                                     XmlElement Include = xDoc.CreateElement("Include", "uri:ea.com:eala:asset");
                                     Include.SetAttribute("type", "all");
                                     Skeleton = Skeleton.ToLower();
-                                    Include.SetAttribute("source", "ART:" + Skeleton + ".w3x");
+                                    Include.SetAttribute("source", $"ART:{Skeleton}.w3x");
                                     newIncludes.AppendChild(Include);
                                     xDoc.DocumentElement.InsertBefore(newIncludes, W3DAnimation);
                                     xDoc.Save(nXML);
@@ -359,14 +359,14 @@ namespace makeskn
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                             CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            System.IO.File.Copy(Path.Combine(fPath, (Animation + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Animation + ".w3x")), true);
-                            File.Delete(Path.Combine(fPath, (Animation + ".w3x")));
+                            File.Copy(Path.Combine(fPath, $"{Animation}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Animation}.w3x"), true);
+                            File.Delete(Path.Combine(fPath, $"{Animation}.w3x"));
 
                         }
                     }
                     if (W3DSkeletons.Count != 0)
                     {
-                        Console.Write("\nProcessing W3X Skeleton: " + w3xfile);
+                        Console.Write($"\nProcessing W3X Skeleton: {w3xfile}");
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             foreach (XmlNode W3DHierarchy in W3DSkeletons)
@@ -398,21 +398,21 @@ namespace makeskn
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                             CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            if (File.Exists(Path.Combine(fPath, (Skeleton + ".w3x"))))
+                            if (File.Exists(Path.Combine(fPath, $"{Skeleton}.w3x")))
                             {
-                                System.IO.File.Copy(Path.Combine(fPath, (Skeleton + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Skeleton + ".w3x")), true);
-                                File.Delete(Path.Combine(fPath, (Skeleton + ".w3x")));
+                                File.Copy(Path.Combine(fPath, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
+                                File.Delete(Path.Combine(fPath, $"{Skeleton}.w3x"));
                             }
                             else
                             {
-                                System.IO.File.Copy(Path.Combine(fPath, (Skeleton + "_HRC.w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Skeleton + ".w3x")), true);
-                                File.Delete(Path.Combine(fPath, (Skeleton + "_HRC.w3x")));
+                                File.Copy(Path.Combine(fPath, $"{Skeleton}_HRC.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
+                                File.Delete(Path.Combine(fPath, $"{Skeleton}_HRC.w3x"));
                             }
                         }
                     }
                     if (W3DMeshes.Count != 0)
                     {
-                        Console.Write("\nProcessing W3X Mesh: " + w3xfile);
+                        Console.Write($"\nProcessing W3X Mesh: {w3xfile}");
                         ArrayList TexturesList = new ArrayList();
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
@@ -458,7 +458,7 @@ namespace makeskn
                                 XmlElement Include = xDoc.CreateElement("Include", "uri:ea.com:eala:asset");
                                 Include.SetAttribute("type", "all");
                                 string strTex2 = strTex.ToLower();
-                                Include.SetAttribute("source", "ART:" + strTex2 + ".xml");
+                                Include.SetAttribute("source", $"ART:{strTex2}.xml");
                                 newIncludes.AppendChild(Include);
                                 xDoc.Save(nXML);
                                 Console.Write(".");
@@ -470,8 +470,8 @@ namespace makeskn
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                             CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            System.IO.File.Copy(Path.Combine(fPath, (Mesh + ".w3x")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + Mesh + ".w3x")), true);
-                            File.Delete(Path.Combine(fPath, (Mesh + ".w3x")));
+                            File.Copy(Path.Combine(fPath, $"{Mesh}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Mesh}.w3x"), true);
+                            File.Delete(Path.Combine(fPath, $"{Mesh}.w3x"));
                         }
                     }
                 }
@@ -489,7 +489,7 @@ namespace makeskn
             {
                 try
                 {
-                    Console.Write("\nMoving Texture File: " + texturefile);
+                    Console.Write($"\nMoving Texture File: {texturefile}");
                     string texture = Path.GetFileNameWithoutExtension(texturefile);
                     // Packed and Individual Images are stored in the Image folder instead of SubFolder
                     if (!texture.StartsWith("Packed") && !texture.StartsWith("Individual"))
@@ -499,20 +499,20 @@ namespace makeskn
                         CompiledFolder.CreateSubdirectory(SubFolderName.ToUpperInvariant());
 
                         // Move Texture file
-                        System.IO.File.Copy(Path.Combine(fPath, (texture + ".dds")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + texture + ".dds")), true);
-                        File.Delete(Path.Combine(fPath, (texture + ".dds")));
+                        File.Copy(Path.Combine(fPath, $"{texture}.dds"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{texture}.dds"), true);
+                        File.Delete(Path.Combine(fPath, $"{texture}.dds"));
                         // With Coresponding xml
-                        System.IO.File.Copy(Path.Combine(fPath, (texture + ".xml")), Path.Combine(fPath, ("Compiled\\" + SubFolderName + "\\" + texture + ".xml")), true);
-                        File.Delete(Path.Combine(fPath, (texture + ".xml")));
+                        File.Copy(Path.Combine(fPath, $"{texture}.xml"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{texture}.xml"), true);
+                        File.Delete(Path.Combine(fPath, $"{texture}.xml"));
                     }
                     else
                     {
                         DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                         CompiledFolder.CreateSubdirectory("Images");
-                        System.IO.File.Copy(Path.Combine(fPath, (texture + ".dds")), Path.Combine(fPath, ("Compiled\\Images\\" + texture + ".dds")), true);
-                        File.Delete(Path.Combine(fPath, (texture + ".dds")));
+                        File.Copy(Path.Combine(fPath, $"{texture}.dds"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}Images{Path.DirectorySeparatorChar}{texture}.dds"), true);
+                        File.Delete(Path.Combine(fPath, $"{texture}.dds"));
                         // Packed and Individual Images are included in a single xml file each
-                        File.Delete(Path.Combine(fPath, (texture + ".xml")));
+                        File.Delete(Path.Combine(fPath, $"{texture}.xml"));
                     }
                 }
                 catch (Exception e)
