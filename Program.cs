@@ -58,12 +58,10 @@ namespace makeskn
                                     if (xnodAttribute.Name == "Hierarchy")
                                     {
                                         Skeleton = xnodAttribute.Value;
-                                        Console.Write(".");
                                     }
                                     if (xnodAttribute.Name == "id")
                                     {
                                         Container = xnodAttribute.Value;
-                                        Console.Write(".");
                                     }
                                 }
 
@@ -74,7 +72,6 @@ namespace makeskn
                                     {
                                         // Bibber's skeleton extension "_HRC". Not applied to SKL but normally the containers won't match the name in this case
                                         string SkeletonFile = Path.Combine(fPath, $"{Skeleton}_HRC.w3x");
-                                        Console.Write(".");
                                         XmlTextReader reader = new XmlTextReader(SkeletonFile);
                                         while (reader.Read())
                                         {
@@ -87,12 +84,12 @@ namespace makeskn
                                                 XmlNode SkeletonNode = xDoc.ReadNode(xmlReader);
                                                 xDoc.DocumentElement.InsertBefore(SkeletonNode, W3DContainer);
                                                 xDoc.Save(nXML);
-                                                Console.Write(".");
                                             }
                                         }
                                         // Delete Skeleton File
                                         reader.Close();
                                         File.Delete(SkeletonFile);
+                                        Console.Write($"\n   Added W3X Skeleton {Skeleton}");
                                     }
                                     // Otherwise reference them to include
                                     else
@@ -104,32 +101,40 @@ namespace makeskn
                                         newIncludes.AppendChild(Include);
                                         xDoc.DocumentElement.InsertBefore(newIncludes, W3DContainer);
                                         xDoc.Save(nXML);
-                                        Console.Write(".");
                                     }
                                 }
                                 // Search for animation files that have the same ID as the Container
                                 if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
                                 {
                                     string AnimationFile = Path.Combine(fPath, $"{Container}.w3x");
-                                    Console.Write(".");
                                     XmlTextReader reader = new XmlTextReader(AnimationFile);
-                                    while (reader.Read())
+                                    // Check that it is an Animation File
+                                    if (reader.ReadToFollowing("W3DAnimation"))
                                     {
-                                        reader.ReadToFollowing("W3DAnimation");
-                                        string strInner = reader.ReadOuterXml();
-                                        if (strInner.Length != 0)
+                                        reader.Close();
+                                        reader = new XmlTextReader(AnimationFile);
+                                        while (reader.Read())
                                         {
-                                            XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
-                                            xmlReader.WhitespaceHandling = WhitespaceHandling.None;
-                                            XmlNode AnimationNode = xDoc.ReadNode(xmlReader);
-                                            xDoc.DocumentElement.InsertBefore(AnimationNode, W3DContainer);
-                                            xDoc.Save(nXML);
-                                            Console.Write(".");
+                                            reader.ReadToFollowing("W3DAnimation");
+                                            string strInner = reader.ReadOuterXml();
+                                            if (strInner.Length != 0)
+                                            {
+                                                XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
+                                                xmlReader.WhitespaceHandling = WhitespaceHandling.None;
+                                                XmlNode AnimationNode = xDoc.ReadNode(xmlReader);
+                                                xDoc.DocumentElement.InsertBefore(AnimationNode, W3DContainer);
+                                                xDoc.Save(nXML);
+                                            }
                                         }
+                                        // Delete Animation File
+                                        reader.Close();
+                                        File.Delete(AnimationFile);
+                                        Console.Write($"\n   Added W3X Animation: {Container}");
                                     }
-                                    // Delete Animation File
-                                    reader.Close();
-                                    File.Delete(AnimationFile);
+                                    else
+                                    {
+                                        reader.Close();
+                                    }
                                 }
                                 
                                 XmlNodeList RenderObjects = xDoc.GetElementsByTagName("RenderObject");
@@ -145,7 +150,6 @@ namespace makeskn
                                         SubObjectTypes.Add(RenderObjectType.CollisionBox);
                                     }
                                     SubObjects.Add(strValue);
-                                    Console.Write(".");
                                 }
 
                                 if (SubObjects.Count > 0)
@@ -153,7 +157,6 @@ namespace makeskn
                                     for (int i = 0; i < SubObjects.Count; i++)
                                     {
                                         string SubObjectFile = Path.Combine(fPath, $"{SubObjects[i]}.w3x");
-                                        Console.Write(".");
                                         XmlTextReader reader = new XmlTextReader(SubObjectFile);
                                         while (reader.Read())
                                         {
@@ -173,12 +176,11 @@ namespace makeskn
                                                 XmlNode SubObjectNode = xDoc.ReadNode(xmlReader);
                                                 xDoc.DocumentElement.InsertBefore(SubObjectNode, W3DContainer);
                                                 xDoc.Save(nXML);
-                                                Console.Write(".");
                                             }
                                         }
+                                        Console.Write($"\n   Added W3X Render Object {SubObjects[i]}");
                                         reader.Close();
                                         File.Delete(SubObjectFile);
-                                        Console.Write(".");
                                     }
                                 }
                             }
@@ -191,7 +193,6 @@ namespace makeskn
                             if (!TexturesList.Contains(strTexture))
                             {
                                 TexturesList.Add(strTexture);
-                                Console.Write(".");
                             }
                         }
                         // Insert Includes if Skeleton is in file
@@ -215,7 +216,6 @@ namespace makeskn
                             Include.SetAttribute("source", $"ART:{strTex2}.xml");
                             newIncludes.AppendChild(Include);
                             xDoc.Save(nXML);
-                            Console.Write(".");
                         }
                         // Remove Comments
                         XmlNodeList Comments = xDoc.SelectNodes("//comment()");
@@ -246,7 +246,7 @@ namespace makeskn
                             xDoc.Save(nXML);
                         }
 
-                        Console.Write("[SUCCESS]\n");
+                        Console.Write("\n[SUCCESS]\n");
 
                         // Set up to sort into sub folders
                         string SubFolderName = Container.Substring(0, 2);
@@ -268,7 +268,7 @@ namespace makeskn
                 }
                 catch (Exception e)
                 {
-                    Console.Write("[ERROR]\n");
+                    Console.Write("\n[ERROR]\n");
                     EmitError("Failed with exception: {0}" + Convert.ToString(e));
                 }
             }
@@ -321,12 +321,10 @@ namespace makeskn
                                     if (xnodAttribute.Name == "id")
                                     {
                                         Animation = xnodAttribute.Value;
-                                        Console.Write(".");
                                     }
                                     if (xnodAttribute.Name == "Hierarchy")
                                     {
                                         Skeleton = xnodAttribute.Value;
-                                        Console.Write(".");
                                     }
                                 }
 
@@ -339,7 +337,6 @@ namespace makeskn
                                     newIncludes.AppendChild(Include);
                                     xDoc.DocumentElement.InsertBefore(newIncludes, W3DAnimation);
                                     xDoc.Save(nXML);
-                                    Console.Write(".");
                                 }
 
                             }
@@ -352,7 +349,7 @@ namespace makeskn
                                 xDoc.Save(nXML);
                             }
 
-                            Console.Write("[SUCCESS]\n");
+                            Console.Write(" [SUCCESS]\n");
 
                             // Copy into compiled folder to avoid second pass
                             string SubFolderName = Animation.Substring(0, 2);
@@ -377,7 +374,6 @@ namespace makeskn
                                     if (xnodAttribute.Name == "id")
                                     {
                                         Skeleton = xnodAttribute.Value;
-                                        Console.Write(".");
                                     }
                                 }
                                 xDoc.DocumentElement.InsertBefore(newIncludes, W3DHierarchy);
@@ -392,7 +388,7 @@ namespace makeskn
                                 xDoc.Save(nXML);
                             }
 
-                            Console.Write("[SUCCESS]\n");
+                            Console.Write(" [SUCCESS]\n");
 
                             string SubFolderName = Skeleton.Substring(0, 2);
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
@@ -424,7 +420,6 @@ namespace makeskn
                                     if (xnodAttribute.Name == "id")
                                     {
                                         Mesh = xnodAttribute.Value;
-                                        Console.Write(".");
                                     }
                                 }
                             }
@@ -446,7 +441,6 @@ namespace makeskn
                                 if (!TexturesList.Contains(strTexture))
                                 {
                                     TexturesList.Add(strTexture);
-                                    Console.Write(".");
                                 }
                             }
                             foreach (XmlNode W3DMesh in W3DMeshes)
@@ -461,10 +455,9 @@ namespace makeskn
                                 Include.SetAttribute("source", $"ART:{strTex2}.xml");
                                 newIncludes.AppendChild(Include);
                                 xDoc.Save(nXML);
-                                Console.Write(".");
                             }
 
-                            Console.Write("[SUCCESS]\n");
+                            Console.Write(" [SUCCESS]\n");
 
                             string SubFolderName = Mesh.Substring(0, 2);
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
@@ -477,7 +470,7 @@ namespace makeskn
                 }
                 catch (Exception e)
                 {
-                    Console.Write("[ERROR]\n");
+                    Console.Write(" [ERROR]\n");
                     EmitError("Failed with exception: {0}" + Convert.ToString(e));
                 }
             }
@@ -517,7 +510,7 @@ namespace makeskn
                 }
                 catch (Exception e)
                 {
-                    Console.Write("[ERROR]\n");
+                    Console.Write(" [ERROR]\n");
                     EmitError("Failed with exception: {0}" + Convert.ToString(e));
                 }
             }
