@@ -217,6 +217,19 @@ namespace makeskn
                                     FixupMatrixAttributes.Remove(FixupMatrixAttributes["M33"]);
                                 }
 
+                                XmlNodeList W3DBones = xDoc.GetElementsByTagName("Pivot");
+                                foreach (XmlNode Pivot in W3DBones)
+                                {
+                                    XmlAttributeCollection PivotAttributes = Pivot.Attributes;
+                                    foreach (XmlNode xnodAttribure in PivotAttributes)
+                                    {
+                                        if (xnodAttribure.Name == "Name")
+                                        {
+                                            xnodAttribure.Value = xnodAttribure.Value.ToUpperInvariant();
+                                        }
+                                    }
+                                }
+
                                 xDoc.Save(nXML);
                             }
                         }
@@ -416,6 +429,19 @@ namespace makeskn
                                     FixupMatrixAttributes.Remove(FixupMatrixAttributes["M13"]);
                                     FixupMatrixAttributes.Remove(FixupMatrixAttributes["M23"]);
                                     FixupMatrixAttributes.Remove(FixupMatrixAttributes["M33"]);
+                                }
+
+                                XmlNodeList W3DBones = xDoc.GetElementsByTagName("Pivot");
+                                foreach (XmlNode Pivot in W3DBones)
+                                {
+                                    XmlAttributeCollection PivotAttributes = Pivot.Attributes;
+                                    foreach (XmlNode xnodAttribure in PivotAttributes)
+                                    {
+                                        if (xnodAttribure.Name == "Name")
+                                        {
+                                            xnodAttribure.Value = xnodAttribure.Value.ToUpperInvariant();
+                                        }
+                                    }
                                 }
 
                                 xDoc.DocumentElement.InsertBefore(newIncludes, W3DHierarchy);
