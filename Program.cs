@@ -24,8 +24,12 @@ namespace makeskn
             ++errors;
         }
 
-        static void buildfile(string w3xfile, string fPath)
+        static bool checkLOD(string w3xfile, string fPath)
         {
+            string fPathLowLOD = Path.Combine(fPath, "LowLOD");
+            bool IsLowLOD = false;
+            string fileName = w3xfile.Remove(0, fPath.Length + 1);
+            fileName = fileName.Remove(fileName.Length - 4, 4);
             if (File.Exists(w3xfile))
             {
                 try
@@ -40,14 +44,18 @@ namespace makeskn
                     string nXML = w3xfile;
                     XmlNodeList AssetDeclarations = xDoc.GetElementsByTagName("AssetDeclaration");
                     XmlNodeList W3DContainers = xDoc.GetElementsByTagName("W3DContainer");
-                    XmlNodeList W3DSkeletons = xDoc.GetElementsByTagName("W3DHierarchy");
-                    XmlNodeList W3DAnimations = xDoc.GetElementsByTagName("W3DAnimation");
                     XmlNodeList W3DMeshes = xDoc.GetElementsByTagName("W3DMesh");
                     XmlNodeList W3DCollisionBoxes = xDoc.GetElementsByTagName("W3DCollisionBox");
                     XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
+                        
                     if (W3DContainers.Count != 0)
                     {
-                        Console.Write($"\nProcessing W3X Container: {w3xfile}");
+                        // Check if LowLOD Container
+                        if (File.Exists(Path.Combine(fPathLowLOD, $"{fileName}.w3x")))
+                        {
+                            Console.Write($"\nHas LowLOD Container");
+                            return true;
+                        }
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
                         {
                             foreach (XmlNode W3DContainer in W3DContainers)
@@ -71,8 +79,155 @@ namespace makeskn
                                     // If Container ID and Skeleton ID is the same, should be in same file
                                     if (Container.ToLowerInvariant() == Skeleton.ToLowerInvariant())
                                     {
+                                        if (File.Exists(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x")))
+                                        {
+                                            Console.Write($"\nHas LowLOD Skeleton");
+                                            // Create LowLOD container in LowLOD folder
+                                            File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
+                                            return true;
+                                        }
+                                    }
+                                }
+
+                                // Search for animation files that have the same ID as the Container
+                                if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
+                                {
+                                    if (File.Exists(Path.Combine(fPathLowLOD, $"{Container}.w3x")))
+                                    {
+                                        // Check that it is Animation
+                                        string AnimationFile = Path.Combine(fPathLowLOD, $"{Container}.w3x");
+
+                                        XmlTextReader reader = new XmlTextReader(AnimationFile);
+                                        // Check that it is an Animation File
+                                        if (reader.ReadToFollowing("W3DAnimation"))
+                                        {
+                                            reader.Close();
+                                            Console.Write($"\nHas LowLOD Animation");
+                                            // Create LowLOD container in LowLOD folder
+                                            File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
+                                            return true;
+                                        }
+                                        else
+                                        {
+                                            reader.Close();
+                                        }
+                                    }
+                                }
+
+                                XmlNodeList RenderObjects = xDoc.GetElementsByTagName("RenderObject");
+                                foreach (XmlNode RenderObject in RenderObjects)
+                                {
+                                    string strValue = (string)RenderObject.FirstChild.InnerText;
+                                    if (RenderObject.FirstChild.Name == "Mesh")
+                                    {
+                                        SubObjectTypes.Add(RenderObjectType.Mesh);
+                                    }
+                                    else if (RenderObject.FirstChild.Name == "CollisionBox")
+                                    {
+                                        SubObjectTypes.Add(RenderObjectType.CollisionBox);
+                                    }
+                                    SubObjects.Add(strValue);
+                                }
+
+                                if (SubObjects.Count > 0)
+                                {
+                                    for (int i = 0; i < SubObjects.Count; i++)
+                                    {
+                                        if (File.Exists(Path.Combine(fPathLowLOD, $"{SubObjects[i]}.w3x")))
+                                        {
+                                            Console.Write($"\nHas LowLOD RenderObject");
+                                            // Create LowLOD container in LowLOD folder
+                                            File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.Write("[ERROR]\n");
+                    EmitError("Failed with exception: {0}" + Convert.ToString(e));
+                }
+            }
+            return IsLowLOD;
+
+        }
+
+        static void buildfile(string w3xfile, string fPath, bool islowLOD)
+        {
+            if (File.Exists(w3xfile))
+            {
+                try
+                {
+                    string Skeleton = "";
+                    string Container = "";
+                    ArrayList SubObjects = new ArrayList();
+                    ArrayList SubObjectTypes = new ArrayList();
+                    ArrayList TexturesList = new ArrayList();
+                    XmlDocument xDoc = new XmlDocument();
+                    xDoc.Load(w3xfile);
+                    string nXML = w3xfile;
+                    XmlNodeList AssetDeclarations = xDoc.GetElementsByTagName("AssetDeclaration");
+                    XmlNodeList W3DContainers = xDoc.GetElementsByTagName("W3DContainer");
+                    XmlNodeList W3DSkeletons = xDoc.GetElementsByTagName("W3DHierarchy");
+                    XmlNodeList W3DAnimations = xDoc.GetElementsByTagName("W3DAnimation");
+                    XmlNodeList W3DMeshes = xDoc.GetElementsByTagName("W3DMesh");
+                    XmlNodeList W3DCollisionBoxes = xDoc.GetElementsByTagName("W3DCollisionBox");
+                    XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
+                    string fPathLowLOD = Path.Combine(fPath, "LowLOD");
+
+                    if (W3DContainers.Count != 0)
+                    {
+                        foreach (XmlNode AssetDeclaration in AssetDeclarations)
+                        {
+                            foreach (XmlNode W3DContainer in W3DContainers)
+                            {
+                                XmlNamedNodeMap mapAttributes = W3DContainer.Attributes;
+                                foreach (XmlNode xnodAttribute in mapAttributes)
+                                {
+                                    if (xnodAttribute.Name == "Hierarchy")
+                                    {
+                                        xnodAttribute.Value = xnodAttribute.Value.ToUpperInvariant();
+                                        Skeleton = xnodAttribute.Value;
+                                    }
+                                    if (xnodAttribute.Name == "id")
+                                    {
+                                        Container = xnodAttribute.Value;
+                                    }
+                                }
+
+                                if (islowLOD)
+                                {
+                                    Console.Write($"\nProcessing LowLOD W3X Container: {Container}");
+                                }
+                                else
+                                {
+                                    Console.Write($"\nProcessing W3X Container: {Container}");
+                                }
+
+                                if (!String.IsNullOrEmpty(Skeleton))
+                                {
+                                    // If Container ID and Skeleton ID is the same, should be in same file
+                                    if (Container.ToLowerInvariant() == Skeleton.ToLowerInvariant())
+                                    {
+                                        string SkeletonFile;
+
+                                        bool SkeletonLowLOD;
+
                                         // Bibber's skeleton extension "_HRC". Not applied to SKL but normally the containers won't match the name in this case
-                                        string SkeletonFile = Path.Combine(fPath, $"{Skeleton}_HRC.w3x");
+                                        if (File.Exists(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x")) && islowLOD)
+                                        {
+                                            SkeletonFile = Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x");
+                                            SkeletonLowLOD = true;
+                                        }
+                                        else
+                                        {
+                                            SkeletonFile = Path.Combine(fPath, $"{Skeleton}_HRC.w3x");
+                                            SkeletonLowLOD = false;
+                                        }
                                         XmlTextReader reader = new XmlTextReader(SkeletonFile);
                                         while (reader.Read())
                                         {
@@ -85,12 +240,15 @@ namespace makeskn
                                                 XmlNode SkeletonNode = xDoc.ReadNode(xmlReader);
                                                 xDoc.DocumentElement.InsertBefore(SkeletonNode, W3DContainer);
                                                 xDoc.Save(nXML);
+                                                Console.Write($"\n   Adding W3X Hierarchy: {Skeleton}");
                                             }
                                         }
                                         // Delete Skeleton File
                                         reader.Close();
-                                        File.Delete(SkeletonFile);
-                                        Console.Write($"\n   Added W3X Skeleton {Skeleton}");
+                                        if (SkeletonLowLOD || !islowLOD)
+                                        {
+                                            File.Delete(SkeletonFile);
+                                        }
                                     }
                                     // Otherwise reference them to include
                                     else
@@ -107,7 +265,20 @@ namespace makeskn
                                 // Search for animation files that have the same ID as the Container
                                 if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
                                 {
-                                    string AnimationFile = Path.Combine(fPath, $"{Container}.w3x");
+                                    string AnimationFile;
+
+                                    bool AnimationLowLOD;
+
+                                    if (File.Exists(Path.Combine(fPathLowLOD, $"{Container}.w3x")) && islowLOD)
+                                    {
+                                        AnimationFile = Path.Combine(fPathLowLOD, $"{Container}.w3x");
+                                        AnimationLowLOD = true;
+                                    }
+                                    else
+                                    {
+                                        AnimationFile = Path.Combine(fPath, $"{Container}.w3x");
+                                        AnimationLowLOD = false;
+                                    }
                                     XmlTextReader reader = new XmlTextReader(AnimationFile);
                                     // Check that it is an Animation File
                                     if (reader.ReadToFollowing("W3DAnimation"))
@@ -129,15 +300,18 @@ namespace makeskn
                                         }
                                         // Delete Animation File
                                         reader.Close();
-                                        File.Delete(AnimationFile);
-                                        Console.Write($"\n   Added W3X Animation: {Container}");
+                                        if (AnimationLowLOD || !islowLOD)
+                                        {
+                                            File.Delete(AnimationFile);
+                                        }
+                                        Console.Write($"\n   Adding W3X Animation: {Container}");
                                     }
                                     else
                                     {
                                         reader.Close();
                                     }
                                 }
-                                
+
                                 XmlNodeList RenderObjects = xDoc.GetElementsByTagName("RenderObject");
                                 foreach (XmlNode RenderObject in RenderObjects)
                                 {
@@ -157,7 +331,20 @@ namespace makeskn
                                 {
                                     for (int i = 0; i < SubObjects.Count; i++)
                                     {
-                                        string SubObjectFile = Path.Combine(fPath, $"{SubObjects[i]}.w3x");
+                                        string SubObjectFile;
+
+                                        bool RenderLowLOD;
+
+                                        if (File.Exists(Path.Combine(fPathLowLOD, $"{SubObjects[i]}.w3x")) && islowLOD)
+                                        {
+                                            SubObjectFile = Path.Combine(fPathLowLOD, $"{SubObjects[i]}.w3x");
+                                            RenderLowLOD = true;
+                                        }
+                                        else
+                                        {
+                                            SubObjectFile = Path.Combine(fPath, $"{SubObjects[i]}.w3x");
+                                            RenderLowLOD = false;
+                                        }
                                         XmlTextReader reader = new XmlTextReader(SubObjectFile);
                                         while (reader.Read())
                                         {
@@ -179,9 +366,12 @@ namespace makeskn
                                                 xDoc.Save(nXML);
                                             }
                                         }
-                                        Console.Write($"\n   Added W3X Render Object {SubObjects[i]}");
                                         reader.Close();
-                                        File.Delete(SubObjectFile);
+                                        if (RenderLowLOD || !islowLOD)
+                                        {
+                                            File.Delete(SubObjectFile);
+                                        }
+                                        Console.Write($"\n   Adding W3X Render Object: {SubObjects[i]}");
                                     }
                                 }
                             }
@@ -306,15 +496,31 @@ namespace makeskn
                         DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                         CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                        if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
+                        if (islowLOD)
                         {
-                            File.Copy(Path.Combine(fPath, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
-                            File.Delete(Path.Combine(fPath, $"{Container}.w3x"));
+                            if (File.Exists(Path.Combine(fPathLowLOD, $"{Container}.w3x")))
+                            {
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}_L.w3x"), true);
+                                File.Delete(Path.Combine(fPathLowLOD, $"{Container}.w3x"));
+                            }
+                            else
+                            {
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Container}_CTR.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}_L.w3x"), true);
+                                File.Delete(Path.Combine(fPathLowLOD, $"{Container}_CTR.w3x"));
+                            }
                         }
                         else
                         {
-                            File.Copy(Path.Combine(fPath, $"{Container}_CTR.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
-                            File.Delete(Path.Combine(fPath, $"{Container}_CTR.w3x"));
+                            if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
+                            {
+                                File.Copy(Path.Combine(fPath, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
+                                File.Delete(Path.Combine(fPath, $"{Container}.w3x"));
+                            }
+                            else
+                            {
+                                File.Copy(Path.Combine(fPath, $"{Container}_CTR.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
+                                File.Delete(Path.Combine(fPath, $"{Container}_CTR.w3x"));
+                            }
                         }
 
                     }
@@ -326,7 +532,7 @@ namespace makeskn
                 }
             }
         }
-        static void movefiles(string w3xfile, string fPath)
+        static void movefiles(string w3xfile, string fPath, bool islowLOD)
         {
             if (File.Exists(w3xfile))
             {
@@ -344,6 +550,7 @@ namespace makeskn
                     XmlNodeList W3DMeshes = xDoc.GetElementsByTagName("W3DMesh");
                     XmlNodeList Includes = xDoc.GetElementsByTagName("Includes");
                     XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
+                    string fPathLowLOD = Path.Combine(fPath, "LowLOD");
 
                     if (W3DAnimations.Count != 0)
                     {
@@ -403,15 +610,23 @@ namespace makeskn
                                 xDoc.Save(nXML);
                             }
 
-                            Console.Write(" [SUCCESS]\n");
+                            Console.Write(" [SUCCESS]");
 
                             // Copy into compiled folder to avoid second pass
                             string SubFolderName = Animation.Substring(0, 2);
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                             CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            File.Copy(Path.Combine(fPath, $"{Animation}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Animation}.w3x"), true);
-                            File.Delete(Path.Combine(fPath, $"{Animation}.w3x"));
+                            if (islowLOD)
+                            {
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Animation}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Animation}_L.w3x"), true);
+                                File.Delete(Path.Combine(fPathLowLOD, $"{Animation}.w3x"));
+                            }
+                            else
+                            {
+                                File.Copy(Path.Combine(fPath, $"{Animation}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Animation}.w3x"), true);
+                                File.Delete(Path.Combine(fPath, $"{Animation}.w3x"));
+                            }
 
                         }
                     }
@@ -466,21 +681,37 @@ namespace makeskn
                                 xDoc.Save(nXML);
                             }
 
-                            Console.Write(" [SUCCESS]\n");
+                            Console.Write(" [SUCCESS]");
 
                             string SubFolderName = Skeleton.Substring(0, 2);
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                             CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            if (File.Exists(Path.Combine(fPath, $"{Skeleton}.w3x")))
+                            if (islowLOD)
                             {
-                                File.Copy(Path.Combine(fPath, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
-                                File.Delete(Path.Combine(fPath, $"{Skeleton}.w3x"));
+                                if (File.Exists(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x")))
+                                {
+                                    File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}_L.w3x"), true);
+                                    File.Delete(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"));
+                                }
+                                else
+                                {
+                                    File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}_L.w3x"), true);
+                                    File.Delete(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x"));
+                                }
                             }
                             else
                             {
-                                File.Copy(Path.Combine(fPath, $"{Skeleton}_HRC.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
-                                File.Delete(Path.Combine(fPath, $"{Skeleton}_HRC.w3x"));
+                                if (File.Exists(Path.Combine(fPath, $"{Skeleton}.w3x")))
+                                {
+                                    File.Copy(Path.Combine(fPath, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
+                                    File.Delete(Path.Combine(fPath, $"{Skeleton}.w3x"));
+                                }
+                                else
+                                {
+                                    File.Copy(Path.Combine(fPath, $"{Skeleton}_HRC.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
+                                    File.Delete(Path.Combine(fPath, $"{Skeleton}_HRC.w3x"));
+                                }
                             }
                         }
                     }
@@ -535,20 +766,28 @@ namespace makeskn
                                 xDoc.Save(nXML);
                             }
 
-                            Console.Write(" [SUCCESS]\n");
+                            Console.Write(" [SUCCESS]");
 
                             string SubFolderName = Mesh.Substring(0, 2);
                             DirectoryInfo CompiledFolder = new DirectoryInfo(Path.Combine(fPath, "Compiled"));
                             CompiledFolder.CreateSubdirectory(SubFolderName);
 
-                            File.Copy(Path.Combine(fPath, $"{Mesh}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Mesh}.w3x"), true);
-                            File.Delete(Path.Combine(fPath, $"{Mesh}.w3x"));
+                            if (islowLOD)
+                            {
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Mesh}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Mesh}_L.w3x"), true);
+                                File.Delete(Path.Combine(fPathLowLOD, $"{Mesh}.w3x"));
+                            }
+                            else
+                            {
+                                File.Copy(Path.Combine(fPath, $"{Mesh}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Mesh}.w3x"), true);
+                                File.Delete(Path.Combine(fPath, $"{Mesh}.w3x"));
+                            }
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.Write(" [ERROR]\n");
+                    Console.Write(" [ERROR]");
                     EmitError("Failed with exception: {0}" + Convert.ToString(e));
                 }
             }
@@ -599,18 +838,44 @@ namespace makeskn
             string[] w3xfiles = Directory.GetFiles(fPath, "*.w3x");
             foreach (string w3xfile in w3xfiles)
             {
-                buildfile(w3xfile, fPath);
+                if (Directory.Exists(Path.Combine(fPath, "LowLOD")))
+                {
+                    bool HasLowLOD = checkLOD(w3xfile, fPath);
+                    if (HasLowLOD == true)
+                    {
+                        string fPathLowLOD = Path.Combine(fPath, "LowLOD");
+                        string fileName = w3xfile.Remove(0, fPath.Length + 1);
+                        fileName = fileName.Remove(fileName.Length - 4, 4);
+
+                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}.w3x"), fPath, true);
+                    }
+                }
+                // if (!File.Exists(w3xfile))
+                // {
+                //     Console.Write($"\nMissing {w3xfile}");
+                // }
+                buildfile(w3xfile, fPath, false);
             }
             // Move rest into compiled folder
             // Want to remove Bibbers skeleton extensions "HRC"
+            Console.Write("\nMove Files\n");
             foreach (string w3xfile in w3xfiles)
             {
-                movefiles(w3xfile, fPath);
+                movefiles(w3xfile, fPath, false);
             }
             string[] texturefiles = Directory.GetFiles(fPath, "*.dds");
             foreach (string texturefile in texturefiles)
             {
                 movetexturefiles(texturefile, fPath);
+            }
+            if (Directory.Exists(Path.Combine(fPath, "LowLOD")))
+            {
+                Console.Write("\nMove LowLOD Files\n");
+                string[] w3xfiles_L = Directory.GetFiles(Path.Combine(fPath, "LowLOD"), "*.w3x");
+                foreach (string w3xfile in w3xfiles_L)
+                {
+                    movefiles(w3xfile, fPath, true);
+                }
             }
         }
 
@@ -633,7 +898,7 @@ namespace makeskn
                     {
                         Console.WriteLine("MakeSKN will process single file");
                         var directoryFullPath = Path.GetDirectoryName(args[0]);
-                        buildfile(args[0], directoryFullPath);
+                        buildfile(args[0], directoryFullPath, false);
                     }
                     else
                     {
