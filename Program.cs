@@ -57,6 +57,7 @@ namespace makeskn
                                 {
                                     if (xnodAttribute.Name == "Hierarchy")
                                     {
+                                        xnodAttribute.Value = xnodAttribute.Value.ToUpperInvariant();
                                         Skeleton = xnodAttribute.Value;
                                     }
                                     if (xnodAttribute.Name == "id")
@@ -353,6 +354,7 @@ namespace makeskn
                                     }
                                     if (xnodAttribute.Name == "Hierarchy")
                                     {
+                                        xnodAttribute.Value = xnodAttribute.Value.ToUpperInvariant();
                                         Skeleton = xnodAttribute.Value;
                                     }
                                 }
