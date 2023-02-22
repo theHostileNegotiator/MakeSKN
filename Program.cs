@@ -205,6 +205,17 @@ namespace makeskn
                                 // Remove redundant namespace
                                 XmlAttributeCollection mapAttributes = W3DHierarchy.Attributes;
                                 mapAttributes.Remove(mapAttributes["xmlns"]);
+
+                                XmlNodeList FixupMatrices = xDoc.GetElementsByTagName("FixupMatrix");
+                                foreach (XmlNode FixupMatrix in FixupMatrices)
+                                {
+                                    XmlAttributeCollection FixupMatrixAttributes = FixupMatrix.Attributes;
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M03"]);
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M13"]);
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M23"]);
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M33"]);
+                                }
+
                                 xDoc.Save(nXML);
                             }
                         }
@@ -243,6 +254,24 @@ namespace makeskn
                         {
                             XmlAttributeCollection mapAttributes = W3DCollisionBox.Attributes;
                             mapAttributes.Remove(mapAttributes["xmlns"]);
+
+                            bool JoypadPickingDefault = false;
+                            XmlNamedNodeMap AttributeList = W3DCollisionBox.Attributes;
+                            foreach (XmlNode xnodAttribute in mapAttributes)
+                            {
+                                if (xnodAttribute.Name == "JoypadPickingOnly")
+                                {
+                                    if (xnodAttribute.Value == "false")
+                                    {
+                                        JoypadPickingDefault = true;
+                                    }
+                                }
+                            }
+                            if (JoypadPickingDefault)
+                            {
+                                mapAttributes.Remove(mapAttributes["JoypadPickingOnly"]);
+                            }
+
                             xDoc.Save(nXML);
                         }
 
@@ -376,6 +405,17 @@ namespace makeskn
                                         Skeleton = xnodAttribute.Value;
                                     }
                                 }
+
+                                XmlNodeList FixupMatrices = xDoc.GetElementsByTagName("FixupMatrix");
+                                foreach (XmlNode FixupMatrix in FixupMatrices)
+                                {
+                                    XmlAttributeCollection FixupMatrixAttributes = FixupMatrix.Attributes;
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M03"]);
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M13"]);
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M23"]);
+                                    FixupMatrixAttributes.Remove(FixupMatrixAttributes["M33"]);
+                                }
+
                                 xDoc.DocumentElement.InsertBefore(newIncludes, W3DHierarchy);
                                 xDoc.Save(nXML);
                             }
