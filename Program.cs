@@ -256,6 +256,16 @@ namespace makeskn
                         {
                             XmlAttributeCollection mapAttributes = W3DAnimation.Attributes;
                             mapAttributes.Remove(mapAttributes["xmlns"]);
+
+                            foreach (XmlNode xnodAttribute in mapAttributes)
+                            {
+                                if (xnodAttribute.Name == "Hierarchy")
+                                {
+                                    xnodAttribute.Value = xnodAttribute.Value.ToUpperInvariant();
+                                    Skeleton = xnodAttribute.Value;
+                                }
+                            }
+
                             xDoc.Save(nXML);
                         }
                         foreach (XmlNode W3DMesh in W3DMeshes)
