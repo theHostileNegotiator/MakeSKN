@@ -12,6 +12,13 @@ enum RenderObjectType
     CollisionBox
 };
 
+enum LevelOfDetail
+{
+    High,
+    Medium,
+    Low
+};
+
 namespace makeskn
 {
     class Program
@@ -24,9 +31,21 @@ namespace makeskn
             ++errors;
         }
 
-        static bool checkLOD(string w3xfile, string fPath)
+        static bool checkLOD(string w3xfile, string fPath, LevelOfDetail LODType)
         {
-            string fPathLowLOD = Path.Combine(fPath, "LowLOD");
+            string fPathLowLOD = "";
+            string LODVersion = "";
+            switch (LODType)
+            {
+                case LevelOfDetail.Medium:
+                    fPathLowLOD = Path.Combine(fPath, "MediumLOD");
+                    LODVersion = "Medium";
+                    break;
+                case LevelOfDetail.Low:
+                    fPathLowLOD = Path.Combine(fPath, "LowLOD");
+                    LODVersion = "Low";
+                    break;
+            }
             bool IsLowLOD = false;
             string fileName = w3xfile.Remove(0, fPath.Length + 1);
             fileName = fileName.Remove(fileName.Length - 4, 4);
@@ -53,7 +72,7 @@ namespace makeskn
                         // Check if LowLOD Container
                         if (File.Exists(Path.Combine(fPathLowLOD, $"{fileName}.w3x")))
                         {
-                            Console.Write($"\nHas LowLOD Container");
+                            Console.Write($"\nHas {LODVersion} LOD Container");
                             return true;
                         }
                         foreach (XmlNode AssetDeclaration in AssetDeclarations)
@@ -81,7 +100,7 @@ namespace makeskn
                                     {
                                         if (File.Exists(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x")))
                                         {
-                                            Console.Write($"\nHas LowLOD Skeleton");
+                                            Console.Write($"\nHas {LODVersion} LOD Skeleton");
                                             // Create LowLOD container in LowLOD folder
                                             File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
                                             return true;
@@ -102,7 +121,7 @@ namespace makeskn
                                         if (reader.ReadToFollowing("W3DAnimation"))
                                         {
                                             reader.Close();
-                                            Console.Write($"\nHas LowLOD Animation");
+                                            Console.Write($"\nHas {LODVersion} LOD Animation");
                                             // Create LowLOD container in LowLOD folder
                                             File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
                                             return true;
@@ -135,7 +154,7 @@ namespace makeskn
                                     {
                                         if (File.Exists(Path.Combine(fPathLowLOD, $"{SubObjects[i]}.w3x")))
                                         {
-                                            Console.Write($"\nHas LowLOD RenderObject");
+                                            Console.Write($"\nHas {LODVersion} LOD RenderObject");
                                             // Create LowLOD container in LowLOD folder
                                             File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
                                             return true;
@@ -156,7 +175,7 @@ namespace makeskn
 
         }
 
-        static void buildfile(string w3xfile, string fPath, bool islowLOD)
+        static void buildfile(string w3xfile, string fPath, LevelOfDetail LODType)
         {
             if (File.Exists(w3xfile))
             {
@@ -177,7 +196,30 @@ namespace makeskn
                     XmlNodeList W3DMeshes = xDoc.GetElementsByTagName("W3DMesh");
                     XmlNodeList W3DCollisionBoxes = xDoc.GetElementsByTagName("W3DCollisionBox");
                     XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
-                    string fPathLowLOD = Path.Combine(fPath, "LowLOD");
+
+                    string fPathLowLOD = "";
+                    string LODPostFix = "";
+                    string LODVersion = "";
+                    switch (LODType)
+                    {
+                        case LevelOfDetail.Medium:
+                            fPathLowLOD = Path.Combine(fPath, "MediumLOD");
+                            LODPostFix = "_M";
+                            LODVersion = "Medium";
+                            break;
+                        case LevelOfDetail.Low:
+                            fPathLowLOD = Path.Combine(fPath, "LowLOD");
+                            LODPostFix = "_L";
+                            LODVersion = "Low";
+                            break;
+                    }
+
+                    bool islowLOD = false;
+
+                    if (LODType == LevelOfDetail.Medium || LODType == LevelOfDetail.Low)
+                    {
+                        islowLOD = true;
+                    }
 
                     if (W3DContainers.Count != 0)
                     {
@@ -201,7 +243,7 @@ namespace makeskn
 
                                 if (islowLOD)
                                 {
-                                    Console.Write($"\nProcessing LowLOD W3X Container: {Container}");
+                                    Console.Write($"\nProcessing {LODVersion} LOD W3X Container: {Container}");
                                 }
                                 else
                                 {
@@ -500,12 +542,12 @@ namespace makeskn
                         {
                             if (File.Exists(Path.Combine(fPathLowLOD, $"{Container}.w3x")))
                             {
-                                File.Copy(Path.Combine(fPathLowLOD, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}_L.w3x"), true);
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}{LODPostFix}.w3x"), true);
                                 File.Delete(Path.Combine(fPathLowLOD, $"{Container}.w3x"));
                             }
                             else
                             {
-                                File.Copy(Path.Combine(fPathLowLOD, $"{Container}_CTR.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}_L.w3x"), true);
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Container}_CTR.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}{LODPostFix}.w3x"), true);
                                 File.Delete(Path.Combine(fPathLowLOD, $"{Container}_CTR.w3x"));
                             }
                         }
@@ -532,7 +574,7 @@ namespace makeskn
                 }
             }
         }
-        static void movefiles(string w3xfile, string fPath, bool islowLOD)
+        static void movefiles(string w3xfile, string fPath, LevelOfDetail LODType)
         {
             if (File.Exists(w3xfile))
             {
@@ -550,7 +592,28 @@ namespace makeskn
                     XmlNodeList W3DMeshes = xDoc.GetElementsByTagName("W3DMesh");
                     XmlNodeList Includes = xDoc.GetElementsByTagName("Includes");
                     XmlElement newIncludes = xDoc.CreateElement("Includes", "uri:ea.com:eala:asset");
-                    string fPathLowLOD = Path.Combine(fPath, "LowLOD");
+
+                    string fPathLowLOD = "";
+                    string LODPostFix = "";
+                    switch (LODType)
+                    {
+                        case LevelOfDetail.Medium:
+                            fPathLowLOD = Path.Combine(fPath, "MediumLOD");
+                            LODPostFix = "_M";
+                            break;
+                        case LevelOfDetail.Low:
+                            fPathLowLOD = Path.Combine(fPath, "LowLOD");
+                            LODPostFix = "_L";
+                            break;
+                    }
+
+                    bool islowLOD = false;
+
+                    if (LODType == LevelOfDetail.Medium || LODType == LevelOfDetail.Low)
+                    {
+                        islowLOD = true;
+                    }
+
 
                     if (W3DAnimations.Count != 0)
                     {
@@ -619,7 +682,7 @@ namespace makeskn
 
                             if (islowLOD)
                             {
-                                File.Copy(Path.Combine(fPathLowLOD, $"{Animation}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Animation}_L.w3x"), true);
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Animation}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Animation}{LODPostFix}.w3x"), true);
                                 File.Delete(Path.Combine(fPathLowLOD, $"{Animation}.w3x"));
                             }
                             else
@@ -691,12 +754,12 @@ namespace makeskn
                             {
                                 if (File.Exists(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x")))
                                 {
-                                    File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}_L.w3x"), true);
+                                    File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}{LODPostFix}.w3x"), true);
                                     File.Delete(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"));
                                 }
                                 else
                                 {
-                                    File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}_L.w3x"), true);
+                                    File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}{LODPostFix}.w3x"), true);
                                     File.Delete(Path.Combine(fPathLowLOD, $"{Skeleton}_HRC.w3x"));
                                 }
                             }
@@ -774,7 +837,7 @@ namespace makeskn
 
                             if (islowLOD)
                             {
-                                File.Copy(Path.Combine(fPathLowLOD, $"{Mesh}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Mesh}_L.w3x"), true);
+                                File.Copy(Path.Combine(fPathLowLOD, $"{Mesh}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Mesh}{LODPostFix}.w3x"), true);
                                 File.Delete(Path.Combine(fPathLowLOD, $"{Mesh}.w3x"));
                             }
                             else
@@ -838,43 +901,64 @@ namespace makeskn
             string[] w3xfiles = Directory.GetFiles(fPath, "*.w3x");
             foreach (string w3xfile in w3xfiles)
             {
+                // Medium LOD
+                if (Directory.Exists(Path.Combine(fPath, "MediumLOD")))
+                {
+                    if (checkLOD(w3xfile, fPath, LevelOfDetail.Medium))
+                    {
+                        string fPathLowLOD = Path.Combine(fPath, "MediumLOD");
+                        string fileName = w3xfile.Remove(0, fPath.Length + 1);
+                        fileName = fileName.Remove(fileName.Length - 4, 4);
+
+                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}.w3x"), fPath, LevelOfDetail.Medium);
+                    }
+                }
+                // Low LOD
                 if (Directory.Exists(Path.Combine(fPath, "LowLOD")))
                 {
-                    bool HasLowLOD = checkLOD(w3xfile, fPath);
-                    if (HasLowLOD == true)
+                    if (checkLOD(w3xfile, fPath, LevelOfDetail.Low))
                     {
                         string fPathLowLOD = Path.Combine(fPath, "LowLOD");
                         string fileName = w3xfile.Remove(0, fPath.Length + 1);
                         fileName = fileName.Remove(fileName.Length - 4, 4);
 
-                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}.w3x"), fPath, true);
+                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}.w3x"), fPath, LevelOfDetail.Low);
                     }
                 }
                 // if (!File.Exists(w3xfile))
                 // {
                 //     Console.Write($"\nMissing {w3xfile}");
                 // }
-                buildfile(w3xfile, fPath, false);
+                buildfile(w3xfile, fPath, LevelOfDetail.High);
             }
             // Move rest into compiled folder
             // Want to remove Bibbers skeleton extensions "HRC"
             Console.Write("\nMove Files\n");
             foreach (string w3xfile in w3xfiles)
             {
-                movefiles(w3xfile, fPath, false);
+                movefiles(w3xfile, fPath, LevelOfDetail.High);
             }
             string[] texturefiles = Directory.GetFiles(fPath, "*.dds");
             foreach (string texturefile in texturefiles)
             {
                 movetexturefiles(texturefile, fPath);
             }
+            if (Directory.Exists(Path.Combine(fPath, "MediumLOD")))
+            {
+                Console.Write("\nMove Medium LOD Files\n");
+                string[] w3xfiles_M = Directory.GetFiles(Path.Combine(fPath, "MediumLOD"), "*.w3x");
+                foreach (string w3xfile in w3xfiles_M)
+                {
+                    movefiles(w3xfile, fPath, LevelOfDetail.Medium);
+                }
+            }
             if (Directory.Exists(Path.Combine(fPath, "LowLOD")))
             {
-                Console.Write("\nMove LowLOD Files\n");
+                Console.Write("\nMove Low LOD Files\n");
                 string[] w3xfiles_L = Directory.GetFiles(Path.Combine(fPath, "LowLOD"), "*.w3x");
                 foreach (string w3xfile in w3xfiles_L)
                 {
-                    movefiles(w3xfile, fPath, true);
+                    movefiles(w3xfile, fPath, LevelOfDetail.Low);
                 }
             }
         }
@@ -898,7 +982,7 @@ namespace makeskn
                     {
                         Console.WriteLine("MakeSKN will process single file");
                         var directoryFullPath = Path.GetDirectoryName(args[0]);
-                        buildfile(args[0], directoryFullPath, false);
+                        buildfile(args[0], directoryFullPath, LevelOfDetail.High);
                     }
                     else
                     {
