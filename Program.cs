@@ -353,6 +353,39 @@ namespace makeskn
                                         reader.Close();
                                     }
                                 }
+                                // Unique Case
+                                else if (File.Exists(Path.Combine(fPathLowLOD, $"{Container}.w3x")))
+                                {
+                                    string AnimationFile = Path.Combine(fPathLowLOD, $"{Container}.w3x");
+                                    XmlTextReader reader = new XmlTextReader(AnimationFile);
+                                    // Check that it is an Animation File
+                                    if (reader.ReadToFollowing("W3DAnimation"))
+                                    {
+                                        reader.Close();
+                                        reader = new XmlTextReader(AnimationFile);
+                                        while (reader.Read())
+                                        {
+                                            reader.ReadToFollowing("W3DAnimation");
+                                            string strInner = reader.ReadOuterXml();
+                                            if (strInner.Length != 0)
+                                            {
+                                                XmlTextReader xmlReader = new XmlTextReader(new StringReader(strInner));
+                                                xmlReader.WhitespaceHandling = WhitespaceHandling.None;
+                                                XmlNode AnimationNode = xDoc.ReadNode(xmlReader);
+                                                xDoc.DocumentElement.InsertBefore(AnimationNode, W3DContainer);
+                                                xDoc.Save(nXML);
+                                            }
+                                        }
+                                        // Delete Animation File
+                                        reader.Close();
+                                        File.Delete(AnimationFile);
+                                        Console.Write($"\n   Adding W3X Animation: {Container}");
+                                    }
+                                    else
+                                    {
+                                        reader.Close();
+                                    }
+                                }
 
                                 XmlNodeList RenderObjects = xDoc.GetElementsByTagName("RenderObject");
                                 foreach (XmlNode RenderObject in RenderObjects)
@@ -540,7 +573,7 @@ namespace makeskn
 
                         if (islowLOD)
                         {
-                            if (File.Exists(Path.Combine(fPathLowLOD, $"{Container}.w3x")))
+                            if (Path.GetFileNameWithoutExtension(w3xfile).ToLowerInvariant() == Container.ToLowerInvariant())
                             {
                                 File.Copy(Path.Combine(fPathLowLOD, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}{LODPostFix}.w3x"), true);
                                 File.Delete(Path.Combine(fPathLowLOD, $"{Container}.w3x"));
@@ -553,7 +586,7 @@ namespace makeskn
                         }
                         else
                         {
-                            if (File.Exists(Path.Combine(fPath, $"{Container}.w3x")))
+                            if (Path.GetFileNameWithoutExtension(w3xfile).ToLowerInvariant() == Container.ToLowerInvariant())
                             {
                                 File.Copy(Path.Combine(fPath, $"{Container}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Container}.w3x"), true);
                                 File.Delete(Path.Combine(fPath, $"{Container}.w3x"));
@@ -752,7 +785,7 @@ namespace makeskn
 
                             if (islowLOD)
                             {
-                                if (File.Exists(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x")))
+                                if (Path.GetFileNameWithoutExtension(w3xfile).ToLowerInvariant() == Skeleton.ToLowerInvariant())
                                 {
                                     File.Copy(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}{LODPostFix}.w3x"), true);
                                     File.Delete(Path.Combine(fPathLowLOD, $"{Skeleton}.w3x"));
@@ -765,7 +798,7 @@ namespace makeskn
                             }
                             else
                             {
-                                if (File.Exists(Path.Combine(fPath, $"{Skeleton}.w3x")))
+                                if (Path.GetFileNameWithoutExtension(w3xfile).ToLowerInvariant() == Skeleton.ToLowerInvariant())
                                 {
                                     File.Copy(Path.Combine(fPath, $"{Skeleton}.w3x"), Path.Combine(fPath, $"Compiled{Path.DirectorySeparatorChar}{SubFolderName}{Path.DirectorySeparatorChar}{Skeleton}.w3x"), true);
                                     File.Delete(Path.Combine(fPath, $"{Skeleton}.w3x"));
