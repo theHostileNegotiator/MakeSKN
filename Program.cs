@@ -47,8 +47,8 @@ namespace makeskn
                     break;
             }
             bool IsLowLOD = false;
-            string fileName = w3xfile.Remove(0, fPath.Length + 1);
-            fileName = fileName.Remove(fileName.Length - 4, 4);
+            string fileName = Path.GetFileName(w3xfile);
+
             if (File.Exists(w3xfile))
             {
                 try
@@ -70,7 +70,7 @@ namespace makeskn
                     if (W3DContainers.Count != 0)
                     {
                         // Check if LowLOD Container
-                        if (File.Exists(Path.Combine(fPathLowLOD, $"{fileName}.w3x")))
+                        if (File.Exists(Path.Combine(fPathLowLOD, $"{fileName}")))
                         {
                             Console.Write($"\nHas {LODVersion} LOD Container");
                             return true;
@@ -102,7 +102,7 @@ namespace makeskn
                                         {
                                             Console.Write($"\nHas {LODVersion} LOD Skeleton");
                                             // Create LowLOD container in LowLOD folder
-                                            File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
+                                            File.Copy(Path.Combine(fPath, $"{fileName}"), Path.Combine(fPathLowLOD, $"{fileName}"), true);
                                             return true;
                                         }
                                     }
@@ -123,7 +123,7 @@ namespace makeskn
                                             reader.Close();
                                             Console.Write($"\nHas {LODVersion} LOD Animation");
                                             // Create LowLOD container in LowLOD folder
-                                            File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
+                                            File.Copy(Path.Combine(fPath, $"{fileName}"), Path.Combine(fPathLowLOD, $"{fileName}"), true);
                                             return true;
                                         }
                                         else
@@ -156,7 +156,7 @@ namespace makeskn
                                         {
                                             Console.Write($"\nHas {LODVersion} LOD RenderObject");
                                             // Create LowLOD container in LowLOD folder
-                                            File.Copy(Path.Combine(fPath, $"{fileName}.w3x"), Path.Combine(fPathLowLOD, $"{fileName}.w3x"), true);
+                                            File.Copy(Path.Combine(fPath, $"{fileName}"), Path.Combine(fPathLowLOD, $"{fileName}"), true);
                                             return true;
                                         }
                                     }
@@ -907,10 +907,9 @@ namespace makeskn
                     if (checkLOD(w3xfile, fPath, LevelOfDetail.Medium))
                     {
                         string fPathLowLOD = Path.Combine(fPath, "MediumLOD");
-                        string fileName = w3xfile.Remove(0, fPath.Length + 1);
-                        fileName = fileName.Remove(fileName.Length - 4, 4);
+                        string fileName = Path.GetFileName(w3xfile);
 
-                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}.w3x"), fPath, LevelOfDetail.Medium);
+                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}"), fPath, LevelOfDetail.Medium);
                     }
                 }
                 // Low LOD
@@ -919,10 +918,9 @@ namespace makeskn
                     if (checkLOD(w3xfile, fPath, LevelOfDetail.Low))
                     {
                         string fPathLowLOD = Path.Combine(fPath, "LowLOD");
-                        string fileName = w3xfile.Remove(0, fPath.Length + 1);
-                        fileName = fileName.Remove(fileName.Length - 4, 4);
+                        string fileName = Path.GetFileName(w3xfile);
 
-                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}.w3x"), fPath, LevelOfDetail.Low);
+                        buildfile(Path.Combine(fPathLowLOD, $"{fileName}"), fPath, LevelOfDetail.Low);
                     }
                 }
                 // if (!File.Exists(w3xfile))
