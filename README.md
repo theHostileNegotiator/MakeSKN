@@ -21,3 +21,7 @@ the same ID. It is recommended to extract the container first, manually add "_CT
 * GBMEDBAYD2_SKN: In Kane's Wrath, the Low LOD version has an animation matching ID
 * AUHEALTHTENT_SKN: In Red Alert 3 and Uprising, the model has an animation matching ID
 * BB_TUNA_SKN: In Red Alert 3 and Uprising, the model has an animation matching ID
+* GDI_DROPPOD_SML_SKN: In Tiberian Twilight, the model has an animation matching ID
+* TB_PRSTRCTRE_SPIKE_SKN: In Tiberian Twilight, the model has an animation matching ID
+* GUMAMM_SKN: In Tiberian Twilight, the model has an animation matching ID
+* GUORCA_SKN: In Tiberian Twilight, the model has an animation matching ID

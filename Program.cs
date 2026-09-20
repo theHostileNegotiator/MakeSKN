@@ -537,6 +537,64 @@ namespace makeskn
                         {
                             XmlAttributeCollection mapAttributes = W3DMesh.Attributes;
                             mapAttributes.Remove(mapAttributes["xmlns"]);
+
+                            XmlNodeList W3DMeshNodes = W3DMesh.ChildNodes;
+                            // foreach (XmlNode W3DMeshNode in W3DMeshNodes)
+                            int NodeCount = 0;
+                            while (NodeCount < W3DMeshNodes.Count)
+                            {
+                                if (W3DMeshNodes[NodeCount].Name == "VertexColors")
+                                {
+                                    // If every value is 1.000000, then it doesn't have set Vertex Color
+                                    bool HasVertexColor = false;
+                                    XmlNodeList VColors = W3DMeshNodes[NodeCount].ChildNodes;
+                                    foreach (XmlNode VColor in VColors)
+                                    {
+                                        XmlAttributeCollection rgbaAttributes = VColor.Attributes;
+
+                                        foreach (XmlNode rgbaAttribute in rgbaAttributes)
+                                        {
+                                            double ColorChannelValue = double.Parse(rgbaAttribute.Value);
+                                            if (ColorChannelValue < 1.0)
+                                            {
+                                                HasVertexColor = true;
+                                                // Fix Rounding
+                                                if (ColorChannelValue > 0.0)
+                                                {
+                                                    double ColorToByteRound = Math.Round(ColorChannelValue * 255.0);
+                                                    // Should always round up as when compiling, converts to Byte and removes the decimal, always rounds down
+                                                    ColorChannelValue = Math.Ceiling((ColorToByteRound / 255.0) * 1000000) * 0.000001;
+                                                    rgbaAttribute.Value = String.Format("{0:0.000000}", ColorChannelValue);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!HasVertexColor)
+                                    {
+                                        W3DMesh.RemoveChild(W3DMeshNodes[NodeCount]);
+                                        NodeCount--;
+                                    }
+                                }
+                                if (W3DMeshNodes[NodeCount].Name == "FXShader")
+                                {
+                                    XmlAttributeCollection xnodAttributes = W3DMeshNodes[NodeCount].Attributes;
+                                    bool HasTechnique = false;
+                                    foreach (XmlNode xnodAttribute in xnodAttributes)
+                                    {
+                                        if (xnodAttribute.Name == "TechniqueIndex")
+                                        {
+                                            HasTechnique = true;
+                                        }
+                                    }
+                                    if (!HasTechnique)
+                                    {
+                                        XmlAttribute ShaderTechnique = xDoc.CreateAttribute("TechniqueIndex");
+                                        ShaderTechnique.Value = "0";
+                                        xnodAttributes.Append(ShaderTechnique);
+                                    }
+                                }
+                                NodeCount++;
+                            }
                             xDoc.Save(nXML);
                         }
                         foreach (XmlNode W3DCollisionBox in W3DCollisionBoxes)
@@ -827,6 +885,64 @@ namespace makeskn
                                         Mesh = xnodAttribute.Value;
                                     }
                                 }
+
+                                XmlNodeList W3DMeshNodes = W3DMesh.ChildNodes;
+                                int NodeCount = 0;
+                                while (NodeCount < W3DMeshNodes.Count)
+                                {
+                                    if (W3DMeshNodes[NodeCount].Name == "VertexColors")
+                                    {
+                                        // If every value is 1.000000, then it doesn't have set Vertex Color
+                                        bool HasVertexColor = false;
+                                        XmlNodeList VColors = W3DMeshNodes[NodeCount].ChildNodes;
+                                        foreach (XmlNode VColor in VColors)
+                                        {
+                                            XmlAttributeCollection rgbaAttributes = VColor.Attributes;
+
+                                            foreach (XmlNode rgbaAttribute in rgbaAttributes)
+                                            {
+                                                double ColorChannelValue = double.Parse(rgbaAttribute.Value);
+                                                if (ColorChannelValue < 1.0)
+                                                {
+                                                    HasVertexColor = true;
+                                                    // Fix Rounding
+                                                    if (ColorChannelValue > 0.0)
+                                                    {
+                                                        double ColorToByteRound = Math.Round(ColorChannelValue * 255.0);
+                                                        // Should always round up as when compiling, converts to Byte and removes the decimal, always rounds down
+                                                        ColorChannelValue = Math.Ceiling((ColorToByteRound / 255.0) * 1000000) * 0.000001;
+                                                        rgbaAttribute.Value = String.Format("{0:0.000000}", ColorChannelValue);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (!HasVertexColor)
+                                        {
+                                            W3DMesh.RemoveChild(W3DMeshNodes[NodeCount]);
+                                            NodeCount--;
+                                        }
+                                    }
+                                    if (W3DMeshNodes[NodeCount].Name == "FXShader")
+                                    {
+                                        XmlAttributeCollection xnodAttributes = W3DMeshNodes[NodeCount].Attributes;
+                                        bool HasTechnique = false;
+                                        foreach (XmlNode xnodAttribute in xnodAttributes)
+                                        {
+                                            if (xnodAttribute.Name == "TechniqueIndex")
+                                            {
+                                                HasTechnique = true;
+                                            }
+                                        }
+                                        if (!HasTechnique)
+                                        {
+                                            XmlAttribute ShaderTechnique = xDoc.CreateAttribute("TechniqueIndex");
+                                            ShaderTechnique.Value = "0";
+                                            xnodAttributes.Append(ShaderTechnique);
+                                        }
+                                    }
+                                    NodeCount++;
+                                }
+
                             }
                             // Remove Comments
                             XmlNodeList Comments = xDoc.SelectNodes("//comment()");
